@@ -32,7 +32,7 @@ function WishlistCard({ item, onRemove, onSelect, removing }) {
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
           <Tooltip content="Remove from wishlist">
             <button
-              onClick={() => onRemove(item.id)}
+              onClick={() => onRemove(item.gameId)}
               disabled={removing}
               className="w-7 h-7 rounded-lg bg-red-900/80 border border-red-700/50 flex items-center justify-center text-red-300 hover:bg-red-700/80 transition-colors disabled:opacity-50"
             >
@@ -101,12 +101,12 @@ export function WishlistPage() {
       {!loading && !error && games.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {games.map(item => (
-            <WishlistCard key={item.id} item={item} onRemove={handleRemove} onSelect={setSelectedGame} removing={removing === item.id} />
+            <WishlistCard key={item.gameId} item={item} onRemove={handleRemove} onSelect={setSelectedGame} removing={removing === item.gameId} />
           ))}
         </div>
       )}
 
-      <GameDetailModal gameId={selectedGame?.id} open={!!selectedGame} onClose={() => setSelectedGame(null)} />
+      <GameDetailModal gameId={selectedGame?.gameId} open={!!selectedGame} onClose={() => setSelectedGame(null)} />
     </div>
   )
 }

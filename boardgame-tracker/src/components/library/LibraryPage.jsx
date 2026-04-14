@@ -151,7 +151,7 @@ function GameBox({ item, onRemove, onSelect, removing }) {
               style={{ background: 'rgba(190,40,30,0.95)' }}
               onClick={e => {
                 e.stopPropagation()
-                onRemove(item.id)
+                onRemove(item.gameId)
               }}
               disabled={removing}
             >
@@ -194,11 +194,11 @@ function ShelfRow({ items, onRemove, onSelect, removing }) {
         {slots.map((item, idx) =>
           item ? (
             <GameBox
-              key={item.id}
+              key={item.gameId}
               item={item}
               onRemove={onRemove}
               onSelect={onSelect}
-              removing={removing === item.id}
+              removing={removing === item.gameId}
             />
           ) : (
             <div key={idx} style={{ width: 86 }} />
@@ -282,7 +282,7 @@ export function LibraryPage() {
       </div>
 
       <GameDetailModal
-        gameId={selectedGame?.id}
+        gameId={selectedGame?.gameId}
         open={!!selectedGame}
         onClose={() => setSelectedGame(null)}
       />

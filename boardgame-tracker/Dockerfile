@@ -5,9 +5,9 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm install
+# Copy package files and install dependencies
+COPY package.json ./
+RUN npm install --loglevel=warn
 
 # Copy source and build
 COPY . .
