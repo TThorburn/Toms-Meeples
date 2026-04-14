@@ -96,27 +96,29 @@ function auth(req, res, next) {
 
 // ── AUTH ──────────────────────────────────────────────────────
 app.post('/api/auth/register', (req, res) => {
-  const { email, password, name } = req.body || {}
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
-  if (users.has(email)) return res.status(409).json({ error: 'Email already registered' })
+  const { username, email, password, name } = req.body || {}
+  const key = username || email
+  if (!key || !password) return res.status(400).json({ error: 'Username and password required' })
+  if (users.has(key)) return res.status(409).json({ error: 'Username already registered' })
   const userId = `user_${Date.now()}`
-  users.set(email, { userId, email, name: name || email, password })
-  const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '7d' })
-  res.json({ token, user: { userId, email, name: name || email } })
+  users.set(key, { userId, username: key, name: name || key, password })
+  const token = jwt.sign({ userId, username: key }, JWT_SECRET, { expiresIn: '7d' })
+  res.json({ token, user: { userId, username: key, name: name || key } })
 })
 
 app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body || {}
-  const user = users.get(email)
+  const { username, email, password } = req.body || {}
+  const key = username || email
+  const user = users.get(key)
   if (!user || user.password !== password) return res.status(401).json({ error: 'Invalid credentials' })
-  const token = jwt.sign({ userId: user.userId, email }, JWT_SECRET, { expiresIn: '7d' })
-  res.json({ token, user: { userId: user.userId, email, name: user.name } })
+  const token = jwt.sign({ userId: user.userId, username: key }, JWT_SECRET, { expiresIn: '7d' })
+  res.json({ token, user: { userId: user.userId, username: key, name: user.name } })
 })
 
 app.get('/api/auth/me', auth, (req, res) => {
   const user = [...users.values()].find(u => u.userId === req.user.userId)
   if (!user) return res.status(404).json({ error: 'User not found' })
-  res.json({ user: { userId: user.userId, email: user.email, name: user.name } })
+  res.json({ user: { userId: user.userId, username: user.username, name: user.name } })
 })
 
 // ── GAMES — powered by bgg-scraper ────────────────────────────
