@@ -195,7 +195,24 @@ async function scrapeSearch(searchTerm, searchType = "boardgame") {
           const avgRating = parseFloat(clean(ratingCells[1])) || null;
           const numVoters = parseInt(clean(ratingCells[2]), 10) || null;
 
-          // Thumbnail: re-enable images would be needed; provide link for client to fetch separately
+          // Extract thumbnail from the search results table
+          const imgEl = row.querySelector("td.collection_thumbnail img");
+          let thumbnail = null;
+          if (imgEl) {
+            thumbnail = imgEl.getAttribute("src") || imgEl.getAttribute("data-src") || null;
+            // Upgrade to higher resolution if it's a cf.geekdo-images URL
+            if (thumbnail && thumbnail.includes("cf.geekdo-images.com")) {
+              // Replace _t (tiny) or _mt (micro thumb) suffix with _md (medium)
+              thumbnail = thumbnail.replace(/_t(\.\w+)$/, "_md$1")
+                                   .replace(/_mt(\.\w+)$/, "_md$1")
+                                   .replace(/_s(\.\w+)$/, "_md$1");
+            }
+          }
+          // Fallback: construct thumbnail URL from BGG ID
+          if (!thumbnail && bggId) {
+            thumbnail = `https://cf.geekdo-images.com/thumb/img/${bggId}`;
+          }
+
           return {
             bggId,
             type,
@@ -207,6 +224,7 @@ async function scrapeSearch(searchTerm, searchType = "boardgame") {
             numVoters,
             description,
             link,
+            thumbnail,
           };
         })
         .filter((r) => r.title);
@@ -259,12 +277,27 @@ async function scrapeGameDetail(bggId) {
     });
 
     // Wait for the Angular app to render game data
-    await page.waitForSelector("h1.game-header-title-heading, .game-header-title", {
-      timeout: CONFIG.timeoutMs,
-    });
+    // Try multiple selectors since BGG updates their markup
+    try {
+      await page.waitForSelector("h1.game-header-title-heading, .game-header-title, [class*='game-header'] h1", {
+        timeout: CONFIG.timeoutMs,
+      });
+    } catch {
+      log.warn(`Title selector not found for ${bggId}, trying page title fallback`);
+    }
 
-    // Give Angular a moment to finish rendering
-    await new Promise((r) => setTimeout(r, 2000));
+    // Wait for Angular to finish rendering — check that title doesn't say "Loading"
+    await new Promise((r) => setTimeout(r, 3000));
+
+    // Extra wait: poll until the title element has real content
+    try {
+      await page.waitForFunction(() => {
+        const el = document.querySelector("h1.game-header-title-heading, .game-header-title h1, [class*='game-header'] h1");
+        return el && el.textContent.trim().length > 0 && !el.textContent.includes("Loading");
+      }, { timeout: 15000 });
+    } catch {
+      log.warn(`Title content still loading for ${bggId}, proceeding anyway`);
+    }
 
     const detail = await page.evaluate((id) => {
       const clean = (s) => (s || "").trim();
@@ -447,6 +480,7 @@ async function startServer() {
           description: r.description,
           link: r.link,
           type: r.type,
+          thumbnail: r.thumbnail,
         }));
 
         sendJSON(res, 200, { games });
