@@ -1,0 +1,22 @@
+{
+  "name": "bgg-scraper",
+  "version": "2.0.0",
+  "description": "Headless Chrome scraper API for BoardGameGeek",
+  "main": "index.js",
+  "bin": {
+    "bgg-search": "./bgg-search.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "cli": "node bgg-search.js",
+    "docker:build": "docker build -t bgg-scraper .",
+    "docker:run": "docker run --rm -p 3002:3002 bgg-scraper"
+  },
+  "dependencies": {
+    "puppeteer": "^22.8.2"
+  },
+  "license": "MIT"
+}
