@@ -158,6 +158,8 @@ export function SearchPage() {
       yearPublished: game.yearPublished,
       image: game.image || game.thumbnail,
       thumbnail: game.thumbnail,
+      minPlayers: game.minPlayers,
+      maxPlayers: game.maxPlayers,
     })
     setLibrary(s => new Set([...s, game.id]))
   }

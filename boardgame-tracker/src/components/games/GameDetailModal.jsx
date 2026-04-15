@@ -164,6 +164,12 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                       {game.minPlayers === game.maxPlayers ? game.minPlayers : `${game.minPlayers}–${game.maxPlayers}`}
                     </div>
                     <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Players</div>
+                    {game.bestPlayers && (
+                      <div className="text-[10px] text-amber-600 mt-1">Best: {game.bestPlayers}</div>
+                    )}
+                    {game.recommendedPlayers && game.recommendedPlayers !== game.bestPlayers && (
+                      <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Rec: {game.recommendedPlayers}</div>
+                    )}
                   </div>
                 )}
                 {game.playingTime != null && (

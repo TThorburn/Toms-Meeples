@@ -35,8 +35,14 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
+  const updateUser = useCallback((updatedUser) => {
+    const merged = { ...user, ...updatedUser }
+    localStorage.setItem('user', JSON.stringify(merged))
+    setUser(merged)
+  }, [user])
+
   return (
-    <AuthContext.Provider value={{ token, user, login, register, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ token, user, login, register, logout, updateUser, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   )

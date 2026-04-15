@@ -93,8 +93,12 @@ function LogPlayModal({ open, onClose, onLogged, library }) {
     if (!form.gameId) { setError('Please select a game.'); return }
     setLoading(true); setError('')
     try {
+      const games = library?.games || library || []
+      const selectedGame = games.find(g => (g.gameId || g.id) === form.gameId)
       const payload = {
         gameId: form.gameId,
+        gameName: selectedGame?.name || null,
+        gameImage: selectedGame?.thumbnail || selectedGame?.image || null,
         datePlayed: form.datePlayed,
         players: form.players.filter(p => p.name.trim()).map(p => ({
           name: p.name.trim(),
@@ -121,7 +125,7 @@ function LogPlayModal({ open, onClose, onLogged, library }) {
         <Select label="Game" value={form.gameId} onChange={e => setForm(f => ({ ...f, gameId: e.target.value }))}>
           <option value="">Select a game…</option>
           {(library?.games || library || []).map(g => (
-            <option key={g.id} value={g.id}>{g.name}</option>
+            <option key={g.gameId || g.id} value={g.gameId || g.id}>{g.name}</option>
           ))}
         </Select>
 
@@ -239,7 +243,7 @@ export function PlaysPage() {
             <Input label="Player name" type="text" placeholder="Filter by player" value={filters.players} onChange={e => setFilters(f => ({ ...f, players: e.target.value }))} />
             <Select label="Game" value={filters.gameId} onChange={e => setFilters(f => ({ ...f, gameId: e.target.value }))}>
               <option value="">All games</option>
-              {(library?.games || library || []).map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              {(library?.games || library || []).map(g => <option key={g.gameId || g.id} value={g.gameId || g.id}>{g.name}</option>)}
             </Select>
           </div>
           <div className="flex gap-2">
