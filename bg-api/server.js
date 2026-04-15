@@ -150,7 +150,6 @@ async function bggSearch(query) {
         if (b.bggRating) return 1
         return 0
       })
-      })
     } catch (err) {
       console.error('[BGG API] batch detail fetch failed:', err.message)
       // Search results still returned, just without images
