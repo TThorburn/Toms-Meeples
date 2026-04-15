@@ -80,6 +80,7 @@ services:
       start_period: 45s
 
   # ── Backend API ─────────────────────────────────────────────────────────────
+  # Now powered by BGG XML API2 — no scraper dependency needed
   bg-api:
     build:
       context: ./bg-api
@@ -91,11 +92,7 @@ services:
     environment:
       PORT: "3001"
       JWT_SECRET: ${JWT_SECRET:-meeple-dev-secret-change-in-production}
-      BGG_SCRAPER_HOST: bgg-scraper
-      BGG_SCRAPER_PORT: "3002"
-    depends_on:
-      bgg-scraper:
-        condition: service_healthy
+      BGG_APP_TOKEN: ${BGG_APP_TOKEN:-}
 
   # ── Frontend ────────────────────────────────────────────────────────────────
   boardgame-tracker:
