@@ -133,7 +133,23 @@ async function bggSearch(query) {
           r.maxPlayers = d.maxPlayers || null
           r.playingTime = d.playingTime || null
           r.weight = d.weight || null
+          r.rank = d.rank || null
         }
+      })
+
+      // Sort by BGG rank (ranked games first, then by rating)
+      searchResults.sort((a, b) => {
+        // Games with a rank come first
+        if (a.rank && !b.rank) return -1
+        if (!a.rank && b.rank) return 1
+        // Both ranked: lower rank number = better
+        if (a.rank && b.rank) return a.rank - b.rank
+        // Neither ranked: sort by rating (higher first)
+        if (a.bggRating && b.bggRating) return b.bggRating - a.bggRating
+        if (a.bggRating) return -1
+        if (b.bggRating) return 1
+        return 0
+      })
       })
     } catch (err) {
       console.error('[BGG API] batch detail fetch failed:', err.message)
