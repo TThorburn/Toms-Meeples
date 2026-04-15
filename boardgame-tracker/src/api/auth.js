@@ -8,4 +8,6 @@ export const authApi = {
     client.post('/auth/register', { username, password }),
 
   me: () => client.get('/auth/me'),
+
+  updateAccount: (data) => client.put('/auth/account', data),
 }
