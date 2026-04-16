@@ -95,7 +95,7 @@ function ShelfRow({ items, onRemove, onSelect, removing }) {
 
   return (
     <div className="relative w-full" style={{ minHeight: 170, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div className="flex items-end flex-wrap pt-4" style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, paddingLeft: SHELF_PADDING, paddingRight: SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}>
+      <div className="flex items-end pt-4" style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, paddingLeft: SHELF_PADDING, paddingRight: SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}>
         {items.map(item => (
           <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} />
         ))}
@@ -251,7 +251,7 @@ export function LibraryPage() {
         ))}
       </div>
 
-      <GameDetailModal gameId={selectedGame?.gameId} open={!!selectedGame} onClose={() => setSelectedGame(null)} />
+      <GameDetailModal gameId={selectedGame?.gameId} open={!!selectedGame} onClose={() => setSelectedGame(null)} isLibraryGame={true} onImageUpdated={refetch} />
     </div>
   )
 }

@@ -50,7 +50,7 @@ async function bggSearch(query) {
     const yearPublished=yr?parseInt(yr[1],10):null
     if(!id||!name)return null
     return {id,name,yearPublished,itemType}
-  }).filter(Boolean).slice(0,50)
+  }).filter(Boolean).slice(0,100)
   if(results.length>0){
     try{
       const details=await bggThingBatch(results.map(r=>r.id))
@@ -78,7 +78,7 @@ async function bggThingBatch(ids) {
   for(let i=0;i<ids.length;i+=20){
     const chunk=ids.slice(i,i+20)
     try{
-      const xml=await httpGet(`${BGG_BASE}/thing?id=${chunk.join(',')}&type=boardgame&stats=1`)
+      const xml=await httpGet(`${BGG_BASE}/thing?id=${chunk.join(',')}&stats=1`)
       for(const item of parseAllTags(xml,'item')){const p=parseThingItem(item);if(p)results.push(p)}
     }catch(err){console.error(`[BGG] thing err:`,err.message)}
   }

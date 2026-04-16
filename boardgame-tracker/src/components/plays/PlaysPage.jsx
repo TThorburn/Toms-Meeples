@@ -121,17 +121,55 @@ function LogPlayModal({ open, onClose, onLogged, library }) {
     }
   }
 
+  const [gameSearch, setGameSearch] = useState('')
+
+  const allLibraryGames = library?.games || library || []
+  const filteredGames = gameSearch
+    ? allLibraryGames.filter(g => g.name?.toLowerCase().includes(gameSearch.toLowerCase()))
+    : allLibraryGames
+
+  function selectGame(g) {
+    setForm(f => ({ ...f, gameId: g.gameId || g.id }))
+    setGameSearch(g.name)
+  }
+
   return (
     <Modal open={open} onClose={onClose} title="Log a Play" size="md">
       <div className="p-6 space-y-5">
         {error && <div className="px-3 py-2 rounded-lg bg-red-900/20 border border-red-900/40 text-red-400 text-sm">{error}</div>}
 
-        <Select label="Game" value={form.gameId} onChange={e => setForm(f => ({ ...f, gameId: e.target.value }))}>
-          <option value="">Select a game…</option>
-          {(library?.games || library || []).map(g => (
-            <option key={g.gameId || g.id} value={g.gameId || g.id}>{g.name}</option>
-          ))}
-        </Select>
+        {/* Searchable game picker */}
+        <div className="relative">
+          <label className="label">Game</label>
+          <input
+            type="text"
+            value={gameSearch}
+            onChange={e => { setGameSearch(e.target.value); setForm(f => ({ ...f, gameId: '' })) }}
+            placeholder="Type to search your library…"
+            className="input-field w-full"
+          />
+          {gameSearch && !form.gameId && filteredGames.length > 0 && (
+            <div className="absolute z-20 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-card)] shadow-lg">
+              {filteredGames.map(g => (
+                <button
+                  key={g.gameId || g.id}
+                  type="button"
+                  onClick={() => selectGame(g)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm hover:bg-[var(--bg-secondary)] transition-colors"
+                >
+                  {g.thumbnail && <img src={g.thumbnail} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />}
+                  <div>
+                    <div className="font-medium text-[var(--text-primary)]">{g.name}</div>
+                    {g.yearPublished && <div className="text-[10px] text-[var(--text-muted)]">{g.yearPublished}</div>}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+          {form.gameId && (
+            <div className="mt-1 text-xs text-green-600 flex items-center gap-1">✓ {gameSearch}</div>
+          )}
+        </div>
 
         <Input label="Date played" type="date" value={form.datePlayed} onChange={e => setForm(f => ({ ...f, datePlayed: e.target.value }))} />
 
