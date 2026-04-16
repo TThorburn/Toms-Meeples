@@ -24,6 +24,8 @@ const BOX_GAP = 12
 const MIN_SHELVES = 3
 const SHELF_PADDING = 20
 
+const BOX_MAX_WIDTH = 180
+
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 
 function ShelfPlank({ topTexture, frontTexture }) {
@@ -57,7 +59,7 @@ function GameBox({ item, onRemove, onSelect, removing }) {
             const { naturalWidth, naturalHeight } = e.currentTarget
             if (naturalWidth && naturalHeight) {
               const ratio = naturalWidth / naturalHeight
-              setBoxWidth(clamp(BOX_HEIGHT * ratio, 60, 180))
+              setBoxWidth(clamp(BOX_HEIGHT * ratio, 60, BOX_MAX_WIDTH))
             }
           }}
           style={{ height: BOX_HEIGHT, borderRadius: 2, display: 'block', boxShadow: hovered ? '6px 10px 22px rgba(0,0,0,0.55)' : '3px 6px 14px rgba(0,0,0,0.45)' }}
@@ -95,7 +97,7 @@ function ShelfRow({ items, onRemove, onSelect, removing }) {
 
   return (
     <div className="relative w-full" style={{ minHeight: 170, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div className="flex items-end pt-4" style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, paddingLeft: SHELF_PADDING, paddingRight: SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}>
+      <div className="flex items-end overflow-hidden pt-4" style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, paddingLeft: SHELF_PADDING, paddingRight: SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}>
         {items.map(item => (
           <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} />
         ))}
@@ -145,7 +147,9 @@ export function LibraryPage() {
     return () => window.removeEventListener('resize', measure)
   }, [])
 
-  const booksPerShelf = Math.max(3, Math.floor((shelfWidth - SHELF_PADDING * 2) / (BOX_BASE_WIDTH + BOX_GAP)))
+  // Use average expected width (most board game boxes are roughly square, ~95px at 120px height)
+  const avgBoxWidth = 95
+  const booksPerShelf = Math.max(3, Math.floor((shelfWidth - SHELF_PADDING * 2 + BOX_GAP) / (avgBoxWidth + BOX_GAP)))
 
   async function handleRemove(id) {
     setRemoving(id)

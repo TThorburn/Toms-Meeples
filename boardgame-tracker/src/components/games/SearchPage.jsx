@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { gamesApi } from '../../api/games'
 import { libraryApi } from '../../api/library'
 import { wishlistApi } from '../../api/wishlist'
@@ -116,6 +116,20 @@ export function SearchPage() {
   const [wishlist, setWishlist] = useState(new Set())
   const [page, setPage] = useState(0)
   const searchAbort = useRef(null)
+
+  // Load existing library & wishlist so "Owned"/"Saved" badges persist
+  const loadUserCollections = useCallback(() => {
+    libraryApi.getAll().then(data => {
+      const ids = (data?.games || []).map(g => String(g.gameId || g.id))
+      if (ids.length > 0) setLibrary(new Set(ids))
+    }).catch(() => {})
+    wishlistApi.getAll().then(data => {
+      const ids = (data?.games || []).map(g => String(g.gameId || g.id))
+      if (ids.length > 0) setWishlist(new Set(ids))
+    }).catch(() => {})
+  }, [])
+
+  useEffect(() => { loadUserCollections() }, [loadUserCollections])
 
   const doSearch = useCallback(async (q) => {
     if (!q.trim()) { setResults([]); setSearched(false); return }
