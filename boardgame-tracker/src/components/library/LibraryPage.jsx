@@ -16,55 +16,64 @@ import placeholderGame from '../textures/placeholder-game.jpg'
 
 const SHELF_TEXTURES = [shelf1, shelf2, shelf3, shelf4, shelf5]
 const WALL_BG = `url(${backTexture})`
-const SHELF_HEIGHT = 42
-const SHELF_TOP_HEIGHT = 16
-const BOX_HEIGHT = 120
-const BOX_BASE_WIDTH = 86
-const BOX_GAP = 12
-const MIN_SHELVES = 3
-const SHELF_PADDING = 20
 
-const BOX_MAX_WIDTH = 180
+// Base (desktop) dimensions
+const BASE = {
+  SHELF_HEIGHT: 42,
+  SHELF_TOP_HEIGHT: 16,
+  BOX_HEIGHT: 120,
+  BOX_BASE_WIDTH: 86,
+  BOX_GAP: 12,
+  SHELF_PADDING: 20,
+  BOX_MAX_WIDTH: 180,
+  SHELF_MIN_HEIGHT: 170,
+}
+
+const MIN_SHELVES = 3
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 
-function ShelfPlank({ topTexture, frontTexture }) {
+// Scale all dimensions by a factor (0.5 on mobile)
+function scaleDims(scale) {
+  return Object.fromEntries(Object.entries(BASE).map(([k, v]) => [k, Math.round(v * scale)]))
+}
+
+function ShelfPlank({ topTexture, frontTexture, dims }) {
   return (
-    <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ height: SHELF_HEIGHT, zIndex: 2 }}>
-      <div style={{ height: SHELF_TOP_HEIGHT, background: `url(${topTexture})`, backgroundRepeat: 'repeat', backgroundSize: 'auto 50px', boxShadow: 'inset 0 1px 0 rgba(0,0,0,0.25), inset 0 -1px 0 rgba(168,152,86,0.25)' }} />
-      <div style={{ height: SHELF_HEIGHT - SHELF_TOP_HEIGHT, background: `url(${frontTexture})`, backgroundRepeat: 'repeat', backgroundSize: 'auto 50px', boxShadow: 'inset 0 1px 0 rgba(95,83,58,0.25), inset 0 -1px 0 rgba(34,23,10,0.28)' }} />
+    <div className="absolute inset-x-0 bottom-0 pointer-events-none" style={{ height: dims.SHELF_HEIGHT, zIndex: 2 }}>
+      <div style={{ height: dims.SHELF_TOP_HEIGHT, background: `url(${topTexture})`, backgroundRepeat: 'repeat', backgroundSize: 'auto 50px', boxShadow: 'inset 0 1px 0 rgba(0,0,0,0.25), inset 0 -1px 0 rgba(168,152,86,0.25)' }} />
+      <div style={{ height: dims.SHELF_HEIGHT - dims.SHELF_TOP_HEIGHT, background: `url(${frontTexture})`, backgroundRepeat: 'repeat', backgroundSize: 'auto 50px', boxShadow: 'inset 0 1px 0 rgba(95,83,58,0.25), inset 0 -1px 0 rgba(34,23,10,0.28)' }} />
     </div>
   )
 }
 
-function GameBox({ item, onRemove, onSelect, removing, onWidthKnown }) {
+function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
   const [hovered, setHovered] = useState(false)
-  const [boxWidth, setBoxWidth] = useState(BOX_BASE_WIDTH)
+  const [boxWidth, setBoxWidth] = useState(dims.BOX_BASE_WIDTH)
 
   const handleLoad = useCallback((e) => {
     const { naturalWidth, naturalHeight } = e.currentTarget
     if (naturalWidth && naturalHeight) {
       const ratio = naturalWidth / naturalHeight
-      const w = clamp(BOX_HEIGHT * ratio, 60, BOX_MAX_WIDTH)
+      const w = clamp(dims.BOX_HEIGHT * ratio, dims.BOX_HEIGHT * 0.5, dims.BOX_MAX_WIDTH)
       setBoxWidth(w)
       onWidthKnown?.(item.gameId, w)
     }
-  }, [item.gameId, onWidthKnown])
+  }, [item.gameId, onWidthKnown, dims])
 
   const handleError = useCallback((e) => {
     e.currentTarget.src = placeholderGame
-    // placeholder is roughly square
-    const w = BOX_BASE_WIDTH
+    const w = dims.BOX_BASE_WIDTH
     setBoxWidth(w)
     onWidthKnown?.(item.gameId, w)
-  }, [item.gameId, onWidthKnown])
+  }, [item.gameId, onWidthKnown, dims])
 
   return (
     <motion.div layout className="relative flex-shrink-0" style={{ width: boxWidth, zIndex: 3 }}>
       <div style={{ position: 'absolute', left: hovered ? -10 : -8, top: hovered ? 6 : 10, width: '90%', height: '90%', background: 'rgba(0,0,0,0.35)', filter: 'blur(10px)', opacity: hovered ? 0.45 : 0.3, zIndex: 0, pointerEvents: 'none', transition: 'all 0.2s ease' }} />
       <div
         className="relative cursor-pointer"
-        style={{ height: BOX_HEIGHT, transform: hovered ? 'translateY(-12px)' : 'translateY(0)', transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1)', zIndex: 1 }}
+        style={{ height: dims.BOX_HEIGHT, transform: hovered ? 'translateY(-12px)' : 'translateY(0)', transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1)', zIndex: 1 }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onClick={() => onSelect(item)}
@@ -74,7 +83,7 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown }) {
           alt={item.name}
           onError={handleError}
           onLoad={handleLoad}
-          style={{ height: BOX_HEIGHT, borderRadius: 2, display: 'block', boxShadow: hovered ? '6px 10px 22px rgba(0,0,0,0.55)' : '3px 6px 14px rgba(0,0,0,0.45)' }}
+          style={{ height: dims.BOX_HEIGHT, borderRadius: 2, display: 'block', boxShadow: hovered ? '6px 10px 22px rgba(0,0,0,0.55)' : '3px 6px 14px rgba(0,0,0,0.45)' }}
         />
         <AnimatePresence>
           {hovered && (
@@ -101,35 +110,35 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown }) {
   )
 }
 
-function ShelfRow({ items, onRemove, onSelect, removing, onWidthKnown }) {
+function ShelfRow({ items, onRemove, onSelect, removing, onWidthKnown, dims }) {
   const { topTexture, frontTexture } = useMemo(() => {
     const shuffled = [...SHELF_TEXTURES].sort(() => Math.random() - 0.5)
     return { topTexture: shuffled[0], frontTexture: shuffled[1] }
   }, [])
 
   return (
-    <div className="relative w-full" style={{ minHeight: 170, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div className="flex items-end overflow-hidden pt-4" style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, paddingLeft: SHELF_PADDING, paddingRight: SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}>
+    <div className="relative w-full" style={{ minHeight: dims.SHELF_MIN_HEIGHT, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
+      <div className="flex items-end overflow-hidden pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px` }}>
         {items.map(item => (
-          <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} onWidthKnown={onWidthKnown} />
+          <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} onWidthKnown={onWidthKnown} dims={dims} />
         ))}
       </div>
       <div className="absolute inset-x-0" style={{ bottom: -8, height: 22, background: 'linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.20), rgba(0,0,0,0))', zIndex: 1, pointerEvents: 'none' }} />
-      <ShelfPlank topTexture={topTexture} frontTexture={frontTexture} />
+      <ShelfPlank topTexture={topTexture} frontTexture={frontTexture} dims={dims} />
     </div>
   )
 }
 
-function EmptyShelfRow() {
+function EmptyShelfRow({ dims }) {
   const { topTexture, frontTexture } = useMemo(() => {
     const shuffled = [...SHELF_TEXTURES].sort(() => Math.random() - 0.5)
     return { topTexture: shuffled[0], frontTexture: shuffled[1] }
   }, [])
   return (
-    <div className="relative w-full" style={{ minHeight: 170, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div style={{ height: 170 - SHELF_HEIGHT }} />
+    <div className="relative w-full" style={{ minHeight: dims.SHELF_MIN_HEIGHT, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
+      <div style={{ height: dims.SHELF_MIN_HEIGHT - dims.SHELF_HEIGHT }} />
       <div className="absolute inset-x-0" style={{ bottom: -8, height: 22, background: 'linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.20), rgba(0,0,0,0))', zIndex: 1, pointerEvents: 'none' }} />
-      <ShelfPlank topTexture={topTexture} frontTexture={frontTexture} />
+      <ShelfPlank topTexture={topTexture} frontTexture={frontTexture} dims={dims} />
     </div>
   )
 }
@@ -151,15 +160,22 @@ export function LibraryPage() {
   const [sortAsc, setSortAsc] = useState(true)
   const shelfRef = useRef(null)
   const [shelfWidth, setShelfWidth] = useState(1000)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
   // Map of gameId -> known actual rendered width (from image onLoad)
   const [knownWidths, setKnownWidths] = useState({})
 
   useEffect(() => {
-    function measure() { if (shelfRef.current) setShelfWidth(shelfRef.current.offsetWidth) }
+    function measure() {
+      if (shelfRef.current) setShelfWidth(shelfRef.current.offsetWidth)
+      setIsMobile(window.innerWidth < 768)
+    }
     measure()
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
   }, [])
+
+  // Scale everything down on mobile
+  const dims = useMemo(() => scaleDims(isMobile ? 0.5 : 1), [isMobile])
 
   const handleWidthKnown = useCallback((gameId, width) => {
     setKnownWidths(prev => {
@@ -207,9 +223,9 @@ export function LibraryPage() {
 
   const shelves = useMemo(() => {
     // Available width for game boxes on each shelf
-    const availableWidth = shelfWidth - SHELF_PADDING * 2
+    const availableWidth = shelfWidth - dims.SHELF_PADDING * 2
     // Fallback width used for games whose image hasn't loaded yet
-    const fallbackWidth = 95
+    const fallbackWidth = dims.BOX_BASE_WIDTH
 
     const rows = []
     let currentRow = []
@@ -218,7 +234,7 @@ export function LibraryPage() {
     for (const game of games) {
       const gameWidth = knownWidths[game.gameId] ?? fallbackWidth
       // Width this game takes including its gap (gap is between items, so add gap for all but the first)
-      const addedWidth = currentRow.length === 0 ? gameWidth : BOX_GAP + gameWidth
+      const addedWidth = currentRow.length === 0 ? gameWidth : dims.BOX_GAP + gameWidth
 
       if (currentRow.length > 0 && currentRowWidth + addedWidth > availableWidth) {
         // This game won't fit — push current row and start a new one
@@ -233,7 +249,7 @@ export function LibraryPage() {
 
     if (currentRow.length > 0) rows.push(currentRow)
     return rows
-  }, [games, knownWidths, shelfWidth])
+  }, [games, knownWidths, shelfWidth, dims])
 
   const emptyShelvesNeeded = Math.max(0, MIN_SHELVES - shelves.length)
 
@@ -284,13 +300,13 @@ export function LibraryPage() {
         </div>
       </div>
 
-      {/* Shelf container — with padding so it doesn't touch sidebar */}
-      <div ref={shelfRef} className="rounded-lg overflow-hidden">
+      {/* Shelf container */}
+      <div ref={shelfRef} className="rounded-lg overflow-hidden w-full">
         {shelves.map((items, idx) => (
-          <ShelfRow key={idx} items={items} onRemove={handleRemove} onSelect={setSelectedGame} removing={removing} onWidthKnown={handleWidthKnown} />
+          <ShelfRow key={idx} items={items} onRemove={handleRemove} onSelect={setSelectedGame} removing={removing} onWidthKnown={handleWidthKnown} dims={dims} />
         ))}
         {Array.from({ length: emptyShelvesNeeded }).map((_, idx) => (
-          <EmptyShelfRow key={`empty-${idx}`} />
+          <EmptyShelfRow key={`empty-${idx}`} dims={dims} />
         ))}
       </div>
 

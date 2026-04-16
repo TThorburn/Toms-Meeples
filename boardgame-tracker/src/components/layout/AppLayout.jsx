@@ -256,9 +256,9 @@ export function AppLayout() {
     <TooltipProvider>
       <div className="flex min-h-screen">
         <aside className="hidden md:flex flex-col w-56 flex-shrink-0 bg-[var(--bg-card)] border-r border-[var(--border-subtle)] fixed inset-y-0 left-0 z-30 shadow-sm">{sidebarContent}</aside>
-        <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2"><div className="w-7 h-7 rounded-lg bg-amber-400 flex items-center justify-center"><Dice6 className="w-4 h-4 text-board-950" /></div><span className="font-display font-bold text-[var(--text-primary)]">Meeple</span></div>
-          <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]">{mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
+        <header className="md:hidden fixed top-0 left-0 right-0 z-40 bg-[var(--bg-secondary)] border-b border-[var(--border-subtle)] flex items-center justify-between px-3 h-14 overflow-visible">
+          <div className="flex items-center gap-2 min-w-0"><div className="w-7 h-7 rounded-lg bg-amber-400 flex items-center justify-center flex-shrink-0"><Dice6 className="w-4 h-4 text-board-950" /></div><span className="font-display font-bold text-[var(--text-primary)] truncate">Meeple</span></div>
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="flex-shrink-0 ml-2 p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]">{mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}</button>
         </header>
         <AnimatePresence>
           {mobileOpen && (
@@ -268,7 +268,7 @@ export function AppLayout() {
             </>
           )}
         </AnimatePresence>
-        <main className="flex-1 md:ml-56 pt-14 md:pt-0 min-h-screen">
+        <main className="flex-1 md:ml-56 pt-14 md:pt-0 min-h-screen overflow-x-hidden">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8"><Outlet /></div>
         </main>
       </div>
