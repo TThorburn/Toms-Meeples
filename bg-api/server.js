@@ -38,23 +38,36 @@ function httpGet(url, retries=5) {
 }
 
 async function bggSearch(query) {
-  const xml = await httpGet(`${BGG_BASE}/search?query=${encodeURIComponent(query)}&type=boardgame`)
+  const xml = await httpGet(`${BGG_BASE}/search?query=${encodeURIComponent(query)}&type=boardgame,boardgameexpansion`)
   const items = parseAllTags(xml,'item')
   const results = items.map(item=>{
     const id=(item.match(/<item[^>]*id="(\d+)"/)||[])[1]
+    const typeMatch = item.match(/<item[^>]*type="([^"]*)"/)
+    const itemType = typeMatch ? typeMatch[1] : 'boardgame'
     const nm=item.match(/<name\s[^>]*type="primary"[^>]*value="([^"]*)"/)
     const name=nm?cleanText(nm[1]):null
     const yr=item.match(/<yearpublished[^>]*value="([^"]*)"/)
     const yearPublished=yr?parseInt(yr[1],10):null
     if(!id||!name)return null
-    return {id,name,yearPublished}
-  }).filter(Boolean).slice(0,100)
+    return {id,name,yearPublished,itemType}
+  }).filter(Boolean).slice(0,50)
   if(results.length>0){
     try{
       const details=await bggThingBatch(results.map(r=>r.id))
       const dm=new Map(details.map(d=>[d.id,d]))
       results.forEach(r=>{const d=dm.get(r.id);if(d)Object.assign(r,{thumbnail:d.thumbnail,image:d.image,bggRating:d.bggRating,description:d.description,minPlayers:d.minPlayers,maxPlayers:d.maxPlayers,playingTime:d.playingTime,weight:d.weight,rank:d.rank})})
-      results.sort((a,b)=>{if(a.rank&&!b.rank)return-1;if(!a.rank&&b.rank)return 1;if(a.rank&&b.rank)return a.rank-b.rank;if(a.bggRating&&b.bggRating)return b.bggRating-a.bggRating;return 0})
+      // Sort: base games before expansions, then by rank, then by rating
+      results.sort((a,b)=>{
+        // Base games before expansions
+        const aBase = a.itemType === 'boardgame' ? 0 : 1
+        const bBase = b.itemType === 'boardgame' ? 0 : 1
+        if (aBase !== bBase) return aBase - bBase
+        // Ranked before unranked
+        if(a.rank&&!b.rank)return-1;if(!a.rank&&b.rank)return 1
+        if(a.rank&&b.rank)return a.rank-b.rank
+        if(a.bggRating&&b.bggRating)return b.bggRating-a.bggRating
+        return 0
+      })
     }catch(err){console.error('[BGG] batch fail:',err.message)}
   }
   return results

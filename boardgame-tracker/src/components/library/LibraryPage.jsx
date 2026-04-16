@@ -4,7 +4,7 @@ import { useApi } from '../../hooks/useApi'
 import { Spinner, ErrorState } from '../ui/primitives'
 import { GameDetailModal } from '../games/GameDetailModal'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, Trash2, Search, Users, X } from 'lucide-react'
+import { BookOpen, Trash2, Search, Users, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 
 import backTexture from '../textures/back.jpg'
 import shelf1 from '../textures/shelf-1.jpg'
@@ -22,6 +22,7 @@ const BOX_HEIGHT = 120
 const BOX_BASE_WIDTH = 86
 const BOX_GAP = 12
 const MIN_SHELVES = 3
+const SHELF_PADDING = 20
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v))
 
@@ -64,15 +65,14 @@ function GameBox({ item, onRemove, onSelect, removing }) {
         <AnimatePresence>
           {hovered && (
             <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
-              style={{ position: 'absolute', left: -10, right: -10, bottom: -24, textAlign: 'center', fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 600, letterSpacing: '0.01em', color: '#271908', pointerEvents: 'none', textShadow: '0 1px 2px rgba(255,255,255,0.6)' }}>
+              style={{ position: 'absolute', left: -10, right: -10, bottom: -24, textAlign: 'center', fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 600, color: '#271908', pointerEvents: 'none', textShadow: '0 1px 2px rgba(255,255,255,0.6)' }}>
               {item.name}
             </motion.div>
           )}
         </AnimatePresence>
         <AnimatePresence>
           {hovered && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
+            <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white"
               style={{ background: 'rgba(190,40,30,0.95)' }}
               onClick={e => { e.stopPropagation(); onRemove(item.gameId) }}
@@ -95,16 +95,11 @@ function ShelfRow({ items, onRemove, onSelect, removing }) {
 
   return (
     <div className="relative w-full" style={{ minHeight: 170, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      {/* Games row — left aligned, wraps naturally */}
-      <div
-        className="flex items-end flex-wrap px-5 pt-4"
-        style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}
-      >
+      <div className="flex items-end flex-wrap pt-4" style={{ paddingBottom: SHELF_TOP_HEIGHT + 4, paddingLeft: SHELF_PADDING, paddingRight: SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${BOX_GAP}px` }}>
         {items.map(item => (
           <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} />
         ))}
       </div>
-      {/* Shadow under shelf */}
       <div className="absolute inset-x-0" style={{ bottom: -8, height: 22, background: 'linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.20), rgba(0,0,0,0))', zIndex: 1, pointerEvents: 'none' }} />
       <ShelfPlank topTexture={topTexture} frontTexture={frontTexture} />
     </div>
@@ -116,7 +111,6 @@ function EmptyShelfRow() {
     const shuffled = [...SHELF_TEXTURES].sort(() => Math.random() - 0.5)
     return { topTexture: shuffled[0], frontTexture: shuffled[1] }
   }, [])
-
   return (
     <div className="relative w-full" style={{ minHeight: 170, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
       <div style={{ height: 170 - SHELF_HEIGHT }} />
@@ -126,12 +120,21 @@ function EmptyShelfRow() {
   )
 }
 
+const SORT_OPTIONS = [
+  { value: 'name', label: 'Name' },
+  { value: 'added', label: 'Date Added' },
+  { value: 'rating', label: 'BGG Rating' },
+  { value: 'plays', label: 'Most Played' },
+]
+
 export function LibraryPage() {
   const { data, loading, error, refetch } = useApi(libraryApi.getAll)
   const [removing, setRemoving] = useState(null)
   const [selectedGame, setSelectedGame] = useState(null)
   const [filter, setFilter] = useState('')
   const [playerFilter, setPlayerFilter] = useState('')
+  const [sortBy, setSortBy] = useState('name')
+  const [sortAsc, setSortAsc] = useState(true)
   const shelfRef = useRef(null)
   const [shelfWidth, setShelfWidth] = useState(1000)
 
@@ -142,8 +145,7 @@ export function LibraryPage() {
     return () => window.removeEventListener('resize', measure)
   }, [])
 
-  // Calculate how many books fit per shelf row
-  const booksPerShelf = Math.max(3, Math.floor((shelfWidth - 40) / (BOX_BASE_WIDTH + BOX_GAP)))
+  const booksPerShelf = Math.max(3, Math.floor((shelfWidth - SHELF_PADDING * 2) / (BOX_BASE_WIDTH + BOX_GAP)))
 
   async function handleRemove(id) {
     setRemoving(id)
@@ -153,18 +155,35 @@ export function LibraryPage() {
   }
 
   const allGames = data?.games || data || []
-  const games = allGames.filter(g => {
-    if (filter && !g.name?.toLowerCase().includes(filter.toLowerCase())) return false
-    if (playerFilter) {
-      const pc = parseInt(playerFilter, 10)
-      if (!isNaN(pc) && g.minPlayers && g.maxPlayers) {
-        if (pc < g.minPlayers || pc > g.maxPlayers) return false
-      }
-    }
-    return true
-  })
 
-  // Split games into shelf rows
+  const games = useMemo(() => {
+    let filtered = allGames.filter(g => {
+      if (filter && !g.name?.toLowerCase().includes(filter.toLowerCase())) return false
+      if (playerFilter) {
+        const pc = parseInt(playerFilter, 10)
+        if (!isNaN(pc) && g.minPlayers && g.maxPlayers) {
+          if (pc < g.minPlayers || pc > g.maxPlayers) return false
+        }
+      }
+      return true
+    })
+
+    // Sort
+    filtered.sort((a, b) => {
+      let cmp = 0
+      switch (sortBy) {
+        case 'name': cmp = (a.name || '').localeCompare(b.name || ''); break
+        case 'added': cmp = new Date(a.addedAt || 0) - new Date(b.addedAt || 0); break
+        case 'rating': cmp = (a.bggRating || 0) - (b.bggRating || 0); break
+        case 'plays': cmp = (a.plays || 0) - (b.plays || 0); break
+        default: cmp = 0
+      }
+      return sortAsc ? cmp : -cmp
+    })
+
+    return filtered
+  }, [allGames, filter, playerFilter, sortBy, sortAsc])
+
   const shelves = useMemo(() => {
     const rows = []
     for (let i = 0; i < games.length; i += booksPerShelf) {
@@ -173,39 +192,60 @@ export function LibraryPage() {
     return rows
   }, [games, booksPerShelf])
 
-  // Ensure minimum shelf count
   const emptyShelvesNeeded = Math.max(0, MIN_SHELVES - shelves.length)
 
   if (loading) return <Spinner />
   if (error) return <ErrorState message={error} onRetry={refetch} />
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Header + controls */}
       <div className="flex justify-between items-start flex-wrap gap-3">
         <h1 className="page-title">Library</h1>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Search filter */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-            <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search…" className="pl-9 input-field w-40" />
+            <input value={filter} onChange={e => setFilter(e.target.value)} placeholder="Search…" className="pl-9 input-field w-36 text-sm" />
           </div>
+          {/* Player count filter */}
           <div className="relative">
-            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
-            <input type="number" min="1" max="20" value={playerFilter} onChange={e => setPlayerFilter(e.target.value)} placeholder="Players" className="pl-9 input-field w-28" />
+            <Users className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
+            <input
+              type="number"
+              min="1"
+              max="20"
+              value={playerFilter}
+              onChange={e => setPlayerFilter(e.target.value)}
+              className="pl-8 input-field w-16 text-sm text-center appearance-none"
+              style={{ MozAppearance: 'textfield' }}
+            />
           </div>
+          {/* Sort */}
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="input-field text-sm w-28 py-2">
+            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <button
+            onClick={() => setSortAsc(v => !v)}
+            className="p-2 rounded-lg border border-[var(--border-subtle)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+            title={sortAsc ? 'Ascending' : 'Descending'}
+          >
+            {sortAsc ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+          </button>
+          {/* Clear */}
           {(filter || playerFilter) && (
-            <button onClick={() => { setFilter(''); setPlayerFilter('') }} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors">
+            <button onClick={() => { setFilter(''); setPlayerFilter('') }} className="p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)]">
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Shelf container — breaks out of parent padding for full-bleed width */}
-      <div ref={shelfRef} className="rounded-lg overflow-hidden -mx-4 sm:-mx-6" style={{ width: 'calc(100% + 2rem)', maxWidth: 'calc(100% + 3rem)' }}>
+      {/* Shelf container — with padding so it doesn't touch sidebar */}
+      <div ref={shelfRef} className="rounded-lg overflow-hidden">
         {shelves.map((items, idx) => (
           <ShelfRow key={idx} items={items} onRemove={handleRemove} onSelect={setSelectedGame} removing={removing} />
         ))}
-        {/* Empty shelves to meet minimum */}
         {Array.from({ length: emptyShelvesNeeded }).map((_, idx) => (
           <EmptyShelfRow key={`empty-${idx}`} />
         ))}

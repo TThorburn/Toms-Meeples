@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { playsApi } from '../../api/plays'
 import { libraryApi } from '../../api/library'
+import { authApi } from '../../api/auth'
 import { useApi } from '../../hooks/useApi'
 import { Button, Input, Select, Spinner, EmptyState, ErrorState, Skeleton, Badge } from '../ui/primitives'
 import { Modal } from '../ui/Modal'
@@ -63,6 +64,7 @@ function PlayRow({ play, onDelete, deleting }) {
 }
 
 function LogPlayModal({ open, onClose, onLogged, library }) {
+  const { data: usersData } = useApi(() => authApi.getUsers().catch(() => ({ users: [] })))
   const [form, setForm] = useState({
     gameId: '',
     datePlayed: new Date().toISOString().split('T')[0],
@@ -70,6 +72,8 @@ function LogPlayModal({ open, onClose, onLogged, library }) {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const knownUsers = (usersData?.users || []).map(u => u.name || u.username)
 
   function addPlayer() {
     setForm(f => ({ ...f, players: [...f.players, { name: '', score: '', winner: false }] }))
@@ -139,6 +143,7 @@ function LogPlayModal({ open, onClose, onLogged, library }) {
               <div key={i} className="flex items-center gap-2">
                 <input
                   type="text"
+                  list="player-suggestions"
                   placeholder={`Player ${i + 1}`}
                   value={p.name}
                   onChange={e => updatePlayer(i, 'name', e.target.value)}
@@ -171,6 +176,9 @@ function LogPlayModal({ open, onClose, onLogged, library }) {
           <button type="button" onClick={addPlayer} className="mt-2 text-xs text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1 transition-colors">
             <Plus className="w-3.5 h-3.5" />Add player
           </button>
+          <datalist id="player-suggestions">
+            {knownUsers.map(name => <option key={name} value={name} />)}
+          </datalist>
         </div>
 
         <div className="flex gap-3 pt-2">
