@@ -69,7 +69,7 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
   }, [item.gameId, onWidthKnown, dims])
 
   return (
-    <motion.div layout className="relative flex-shrink-0" style={{ width: boxWidth, zIndex: 3 }}>
+    <motion.div layout className="relative flex-shrink-0" style={{ width: boxWidth, zIndex: 3, overflow: 'visible' }}>
       <div style={{ position: 'absolute', left: hovered ? -10 : -8, top: hovered ? 6 : 10, width: '90%', height: '90%', background: 'rgba(0,0,0,0.35)', filter: 'blur(10px)', opacity: hovered ? 0.45 : 0.3, zIndex: 0, pointerEvents: 'none', transition: 'all 0.2s ease' }} />
       <div
         className="relative cursor-pointer"
@@ -88,7 +88,7 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
         <AnimatePresence>
           {hovered && (
             <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
-              style={{ position: 'absolute', left: -10, right: -10, bottom: -24, textAlign: 'center', fontFamily: '"DM Sans", sans-serif', fontSize: 13, fontWeight: 600, color: '#271908', pointerEvents: 'none', textShadow: '0 1px 2px rgba(255,255,255,0.6)' }}>
+              style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -28, width: 'max-content', maxWidth: 140, textAlign: 'center', fontFamily: '"DM Sans", sans-serif', fontSize: 11, fontWeight: 600, color: '#271908', pointerEvents: 'none', textShadow: '0 1px 2px rgba(255,255,255,0.6)', lineHeight: 1.3, whiteSpace: 'normal', zIndex: 10 }}>
               {item.name}
             </motion.div>
           )}
@@ -118,7 +118,7 @@ function ShelfRow({ items, onRemove, onSelect, removing, onWidthKnown, dims }) {
 
   return (
     <div className="relative w-full" style={{ minHeight: dims.SHELF_MIN_HEIGHT, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div className="flex items-end overflow-hidden pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px` }}>
+      <div className="flex items-end pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px`, overflow: 'visible' }}>
         {items.map(item => (
           <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} onWidthKnown={onWidthKnown} dims={dims} />
         ))}
