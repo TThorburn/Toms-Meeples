@@ -69,13 +69,19 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
   }, [item.gameId, onWidthKnown, dims])
 
   return (
-    <motion.div layout className="relative flex-shrink-0" style={{ width: boxWidth, zIndex: 3, overflow: 'visible' }}>
+    <motion.div
+      layout
+      className="relative flex-shrink-0"
+      style={{ width: boxWidth, zIndex: hovered ? 20 : 3, overflow: 'visible' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Drop shadow */}
       <div style={{ position: 'absolute', left: hovered ? -10 : -8, top: hovered ? 6 : 10, width: '90%', height: '90%', background: 'rgba(0,0,0,0.35)', filter: 'blur(10px)', opacity: hovered ? 0.45 : 0.3, zIndex: 0, pointerEvents: 'none', transition: 'all 0.2s ease' }} />
+      {/* Game image - lifts on hover */}
       <div
         className="relative cursor-pointer"
         style={{ height: dims.BOX_HEIGHT, transform: hovered ? 'translateY(-12px)' : 'translateY(0)', transition: 'transform 0.25s cubic-bezier(0.34,1.4,0.64,1)', zIndex: 1 }}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         onClick={() => onSelect(item)}
       >
         <img
@@ -85,19 +91,12 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
           onLoad={handleLoad}
           style={{ height: dims.BOX_HEIGHT, borderRadius: 2, display: 'block', boxShadow: hovered ? '6px 10px 22px rgba(0,0,0,0.55)' : '3px 6px 14px rgba(0,0,0,0.45)' }}
         />
-        <AnimatePresence>
-          {hovered && (
-            <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
-              style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', bottom: -28, width: 'max-content', maxWidth: 140, textAlign: 'center', fontFamily: '"DM Sans", sans-serif', fontSize: 11, fontWeight: 600, color: '#271908', pointerEvents: 'none', textShadow: '0 1px 2px rgba(255,255,255,0.6)', lineHeight: 1.3, whiteSpace: 'normal', zIndex: 10 }}>
-              {item.name}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Delete button */}
         <AnimatePresence>
           {hovered && (
             <motion.button initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
               className="absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-white"
-              style={{ background: 'rgba(190,40,30,0.95)' }}
+              style={{ background: 'rgba(190,40,30,0.95)', zIndex: 2 }}
               onClick={e => { e.stopPropagation(); onRemove(item.gameId) }}
               disabled={removing}
             >
@@ -106,6 +105,35 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
           )}
         </AnimatePresence>
       </div>
+      {/* Name label - on outer wrapper so it's above all sibling boxes and never shifts layout */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              top: '100%',
+              marginTop: 4,
+              width: 'max-content',
+              maxWidth: 130,
+              textAlign: 'center',
+              fontFamily: '"DM Sans", sans-serif',
+              fontSize: 11,
+              fontWeight: 600,
+              color: '#271908',
+              pointerEvents: 'none',
+              textShadow: '0 1px 3px rgba(255,255,255,0.7)',
+              lineHeight: 1.3,
+              whiteSpace: 'normal',
+              zIndex: 30,
+            }}
+          >
+            {item.name}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -118,7 +146,7 @@ function ShelfRow({ items, onRemove, onSelect, removing, onWidthKnown, dims }) {
 
   return (
     <div className="relative w-full" style={{ minHeight: dims.SHELF_MIN_HEIGHT, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div className="flex items-end pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px`, overflow: 'visible' }}>
+      <div className="flex items-end pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px` }}>
         {items.map(item => (
           <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} onWidthKnown={onWidthKnown} dims={dims} />
         ))}
@@ -224,8 +252,9 @@ export function LibraryPage() {
   const shelves = useMemo(() => {
     // Available width for game boxes on each shelf
     const availableWidth = shelfWidth - dims.SHELF_PADDING * 2
-    // Fallback width used for games whose image hasn't loaded yet
-    const fallbackWidth = dims.BOX_BASE_WIDTH
+    // Fallback width used for games whose image hasn't loaded yet.
+    // Use BOX_MAX_WIDTH (pessimistic) so we never overpack a row before images arrive.
+    const fallbackWidth = dims.BOX_MAX_WIDTH
 
     const rows = []
     let currentRow = []
