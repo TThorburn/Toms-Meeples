@@ -28,6 +28,15 @@ export function AuthProvider({ children }) {
     return data
   }, [])
 
+  const setup = useCallback(async (username, password, name) => {
+    const data = await authApi.setup({ username, password, name })
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('user', JSON.stringify(data.user))
+    setToken(data.token)
+    setUser(data.user)
+    return data
+  }, [])
+
   const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -41,8 +50,10 @@ export function AuthProvider({ children }) {
     setUser(merged)
   }, [user])
 
+  const isAdmin = user?.role === 'admin'
+
   return (
-    <AuthContext.Provider value={{ token, user, login, register, logout, updateUser, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ token, user, login, register, setup, logout, updateUser, isAuthenticated: !!token, isAdmin }}>
       {children}
     </AuthContext.Provider>
   )

@@ -8,7 +8,7 @@ import { Tooltip } from '../ui/Tooltip'
 import { motion } from 'framer-motion'
 import {
   Trophy, Users, Crown, Medal, LogIn, LogOut, BarChart3,
-  Plus, ArrowLeft, Calendar, Gamepad2, X
+  Plus, ArrowLeft, Calendar, Gamepad2, X, UserPlus
 } from 'lucide-react'
 
 // ── League Card ──────────────────────────────────────────────────
@@ -167,15 +167,33 @@ function LogLeaguePlayModal({ open, onClose, onLogged, leagueId }) {
 function LeagueDetailView({ league, onBack }) {
   const { data: lbData, loading: lbLoading, refetch: lbRefetch } = useApi(() => leaguesApi.getLeaderboard(league.id), [league.id])
   const { data: playsData, loading: playsLoading, refetch: playsRefetch } = useApi(() => leaguesApi.getPlays(league.id), [league.id])
-  const { data: statsData } = useApi(() => leaguesApi.getStats(league.id), [league.id])
+  const { data: statsData, refetch: statsRefetch } = useApi(() => leaguesApi.getStats(league.id), [league.id])
+  const { data: leagueData, refetch: leagueRefetch } = useApi(() => leaguesApi.getById(league.id), [league.id])
   const [logOpen, setLogOpen] = useState(false)
   const [tab, setTab] = useState('leaderboard')
+  const [addUsername, setAddUsername] = useState('')
+  const [addError, setAddError] = useState('')
+  const [addSuccess, setAddSuccess] = useState('')
 
   const leaderboard = lbData?.leaderboard || []
   const plays = playsData?.plays || []
   const stats = statsData || {}
+  const currentLeague = leagueData?.league || league
+  const members = currentLeague.members || league.memberNames?.map(n => ({ name: n })) || []
 
-  function handleLogged() { lbRefetch(); playsRefetch() }
+  function handleLogged() { lbRefetch(); playsRefetch(); statsRefetch() }
+
+  async function handleAddMember() {
+    if (!addUsername.trim()) return
+    setAddError(''); setAddSuccess('')
+    try {
+      await leaguesApi.addMember(league.id, addUsername.trim())
+      setAddSuccess(`${addUsername} added!`)
+      setAddUsername('')
+      leagueRefetch()
+      setTimeout(() => setAddSuccess(''), 2000)
+    } catch (err) { setAddError(err.message) }
+  }
 
   function rankIcon(pos) {
     if (pos === 1) return <Crown className="w-4 h-4 text-amber-400" />
@@ -195,18 +213,23 @@ function LeagueDetailView({ league, onBack }) {
           <h1 className="page-title">{league.name}</h1>
           {league.description && <p className="text-sm text-[var(--text-muted)] mt-1">{league.description}</p>}
           <div className="flex items-center gap-4 mt-2 text-xs text-[var(--text-muted)]">
-            <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{league.memberCount} members</span>
-            <span className="flex items-center gap-1"><BarChart3 className="w-3.5 h-3.5" />{league.gamesPlayed} games played</span>
+            <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" />{currentLeague.memberCount || members.length} members</span>
+            <span className="flex items-center gap-1"><BarChart3 className="w-3.5 h-3.5" />{currentLeague.gamesPlayed || plays.length} games played</span>
           </div>
         </div>
-        {league.isMember && (
+        {(league.isMember || currentLeague.isMember) && (
           <Button size="sm" onClick={() => setLogOpen(true)}><Plus className="w-3.5 h-3.5" />Log Play</Button>
         )}
       </div>
 
       {/* Tabs */}
       <div className="flex gap-1 bg-[var(--bg-secondary)] p-1 rounded-lg border border-[var(--border-subtle)]">
-        {[{ id: 'leaderboard', label: 'Leaderboard', icon: Trophy }, { id: 'plays', label: 'Play History', icon: Calendar }, { id: 'stats', label: 'Stats', icon: BarChart3 }].map(t => (
+        {[
+          { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+          { id: 'members', label: 'Members', icon: Users },
+          { id: 'plays', label: 'History', icon: Calendar },
+          { id: 'stats', label: 'Stats', icon: BarChart3 },
+        ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-colors ${tab === t.id ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'}`}>
             <t.icon className="w-3.5 h-3.5" />{t.label}
@@ -235,6 +258,37 @@ function LeagueDetailView({ league, onBack }) {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Members Tab */}
+      {tab === 'members' && (
+        <div className="space-y-4">
+          {/* Add member */}
+          <div className="card p-4">
+            <div className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-2">Add Member by Username</div>
+            {addError && <div className="text-xs text-red-400 mb-2">{addError}</div>}
+            {addSuccess && <div className="text-xs text-green-400 mb-2">{addSuccess}</div>}
+            <div className="flex gap-2">
+              <input value={addUsername} onChange={e => setAddUsername(e.target.value)} placeholder="Enter username" className="input-field flex-1"
+                onKeyDown={e => { if (e.key === 'Enter') handleAddMember() }} />
+              <Button size="sm" onClick={handleAddMember}><UserPlus className="w-3.5 h-3.5" />Add</Button>
+            </div>
+          </div>
+          {/* Member list */}
+          <div className="space-y-2">
+            {members.map((m, i) => (
+              <div key={m.userId || i} className="card p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-amber-400/20 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xs font-bold text-amber-400">{(m.name || m.username || '?')[0].toUpperCase()}</span>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-[var(--text-primary)]">{m.name || m.username}</div>
+                  {m.username && <div className="text-[10px] text-[var(--text-muted)]">@{m.username}</div>}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

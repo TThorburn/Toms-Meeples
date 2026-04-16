@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
-import { LoginPage, RegisterPage } from './components/auth/AuthPages'
+import { LoginPage, RegisterPage, SetupPage } from './components/auth/AuthPages'
 import { DashboardPage } from './components/dashboard/DashboardPage'
 import { SearchPage } from './components/games/SearchPage'
 import { LibraryPage } from './components/library/LibraryPage'
@@ -15,19 +15,15 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Setup — first run only */}
+        <Route path="/setup" element={<SetupPage />} />
+
         {/* Public routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
+        <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
           <Route index element={<DashboardPage />} />
           <Route path="search" element={<SearchPage />} />
           <Route path="library" element={<LibraryPage />} />
@@ -36,7 +32,6 @@ export default function App() {
           <Route path="leagues" element={<LeaguesPage />} />
         </Route>
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

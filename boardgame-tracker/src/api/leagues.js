@@ -6,6 +6,7 @@ export const leaguesApi = {
   create: (data) => client.post('/leagues', data),
   join: (id) => client.post(`/leagues/${id}/join`),
   leave: (id) => client.delete(`/leagues/${id}/leave`),
+  addMember: (id, username) => client.post(`/leagues/${id}/members`, { username }),
   getLeaderboard: (id) => client.get(`/leagues/${id}/leaderboard`),
   getPlays: (id) => client.get(`/leagues/${id}/plays`),
   logPlay: (id, data) => client.post(`/leagues/${id}/plays`, data),
