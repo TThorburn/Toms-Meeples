@@ -50,6 +50,8 @@ function ShelfPlank({ topTexture, frontTexture, dims }) {
 function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
   const [hovered, setHovered] = useState(false)
   const [boxWidth, setBoxWidth] = useState(dims.BOX_BASE_WIDTH)
+  const [labelPos, setLabelPos] = useState({ x: 0, y: 0 })
+  const boxRef = useRef(null)
 
   const handleLoad = useCallback((e) => {
     const { naturalWidth, naturalHeight } = e.currentTarget
@@ -68,12 +70,22 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
     onWidthKnown?.(item.gameId, w)
   }, [item.gameId, onWidthKnown, dims])
 
+  const handleMouseEnter = useCallback(() => {
+    if (boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect()
+      // getBoundingClientRect() returns viewport coords — perfect for position:fixed
+      setLabelPos({ x: rect.left + rect.width / 2, y: rect.bottom + 6 })
+    }
+    setHovered(true)
+  }, [])
+
   return (
     <motion.div
+      ref={boxRef}
       layout
       className="relative flex-shrink-0"
-      style={{ width: boxWidth, zIndex: hovered ? 20 : 3, overflow: 'visible' }}
-      onMouseEnter={() => setHovered(true)}
+      style={{ width: boxWidth, zIndex: hovered ? 20 : 3 }}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Drop shadow */}
@@ -105,33 +117,37 @@ function GameBox({ item, onRemove, onSelect, removing, onWidthKnown, dims }) {
           )}
         </AnimatePresence>
       </div>
-      {/* Name label - on outer wrapper so it's above all sibling boxes and never shifts layout */}
+      {/* Label rendered at fixed position to escape all overflow:hidden ancestors.
+          Outer div handles the fixed position + translateX centering.
+          Inner motion.div only animates opacity/y — no transform conflict. */}
       <AnimatePresence>
         {hovered && (
-          <motion.div
-            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
-            style={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              top: '100%',
-              marginTop: 4,
-              width: 'max-content',
-              maxWidth: 130,
-              textAlign: 'center',
-              fontFamily: '"DM Sans", sans-serif',
-              fontSize: 11,
-              fontWeight: 600,
-              color: '#271908',
-              pointerEvents: 'none',
-              textShadow: '0 1px 3px rgba(255,255,255,0.7)',
-              lineHeight: 1.3,
-              whiteSpace: 'normal',
-              zIndex: 30,
-            }}
-          >
-            {item.name}
-          </motion.div>
+          <div style={{
+            position: 'fixed',
+            left: labelPos.x,
+            top: labelPos.y,
+            transform: 'translateX(-50%)',
+            width: 'max-content',
+            maxWidth: 120,
+            textAlign: 'center',
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }}>
+            <motion.div
+              initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
+              style={{
+                fontFamily: '"DM Sans", sans-serif',
+                fontSize: 11,
+                fontWeight: 600,
+                color: '#271908',
+                textShadow: '0 1px 3px rgba(255,255,255,0.7)',
+                lineHeight: 1.3,
+                whiteSpace: 'normal',
+              }}
+            >
+              {item.name}
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </motion.div>
@@ -146,7 +162,7 @@ function ShelfRow({ items, onRemove, onSelect, removing, onWidthKnown, dims }) {
 
   return (
     <div className="relative w-full" style={{ minHeight: dims.SHELF_MIN_HEIGHT, background: WALL_BG, backgroundRepeat: 'repeat', backgroundSize: 'auto 800px' }}>
-      <div className="flex items-end pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px` }}>
+      <div className="flex items-end overflow-hidden pt-4" style={{ paddingBottom: dims.SHELF_TOP_HEIGHT + 4, paddingLeft: dims.SHELF_PADDING, paddingRight: dims.SHELF_PADDING, position: 'relative', zIndex: 3, gap: `${dims.BOX_GAP}px`, flexWrap: 'nowrap' }}>
         {items.map(item => (
           <GameBox key={item.gameId} item={item} onRemove={onRemove} onSelect={onSelect} removing={removing === item.gameId} onWidthKnown={onWidthKnown} dims={dims} />
         ))}
