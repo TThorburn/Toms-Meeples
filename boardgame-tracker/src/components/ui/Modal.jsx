@@ -4,6 +4,14 @@ import { X } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { motion, AnimatePresence } from 'framer-motion'
 
+function VisuallyHidden({ children }) {
+  return (
+    <span style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', borderWidth: 0 }}>
+      {children}
+    </span>
+  )
+}
+
 export function Modal({ open, onClose, title, children, size = 'md', className }) {
   const sizes = {
     sm: 'max-w-md',
@@ -40,7 +48,8 @@ export function Modal({ open, onClose, title, children, size = 'md', className }
                 exit={{ opacity: 0, scale: 0.96, y: 8 }}
                 transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               >
-                {title && (
+                {/* Always render a Dialog.Title — visible or hidden */}
+                {title ? (
                   <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-subtle)] flex-shrink-0">
                     <Dialog.Title className="font-display text-lg font-semibold text-[var(--text-primary)]">
                       {title}
@@ -52,7 +61,11 @@ export function Modal({ open, onClose, title, children, size = 'md', className }
                       <X className="w-4 h-4" />
                     </button>
                   </div>
+                ) : (
+                  <VisuallyHidden><Dialog.Title>Dialog</Dialog.Title></VisuallyHidden>
                 )}
+                {/* Hidden description to suppress aria warning */}
+                <VisuallyHidden><Dialog.Description>Dialog content</Dialog.Description></VisuallyHidden>
                 <div className="flex-1 overflow-y-auto">
                   {children}
                 </div>

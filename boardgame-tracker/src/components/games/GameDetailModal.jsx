@@ -124,7 +124,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             {/* Hero image + title */}
             <div className="relative">
               {game.image && (
-                <div className="h-48 overflow-hidden bg-[var(--bg-secondary)] relative group">
+                <div className="h-32 sm:h-48 overflow-hidden bg-[var(--bg-secondary)] relative group">
                   <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] via-transparent to-transparent" />
                   {/* Cover photo upload button — only for library games */}
@@ -149,15 +149,15 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                   </div>
                 </div>
               )}
-              <div className={`px-6 ${game.image ? 'pt-3 pb-5 -mt-16 relative' : 'pt-6 pb-5'}`}>
-                <div className="flex items-start gap-4">
+              <div className={`px-4 sm:px-6 ${game.image ? 'pt-2 sm:pt-3 pb-4 sm:pb-5 -mt-12 sm:-mt-16 relative' : 'pt-4 sm:pt-6 pb-4 sm:pb-5'}`}>
+                <div className="flex items-start gap-3 sm:gap-4">
                   {/* Thumbnail with upload overlay */}
                   <div className="relative group flex-shrink-0">
                     {game.thumbnail ? (
-                      <img src={game.thumbnail} alt="" className="w-16 h-16 rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
+                      <img src={game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
                     ) : (
-                      <div className="w-16 h-16 rounded-xl bg-[var(--bg-secondary)] border-2 border-[var(--border-medium)] flex items-center justify-center">
-                        <BookOpen className="w-6 h-6 text-[var(--text-muted)]" />
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-[var(--bg-secondary)] border-2 border-[var(--border-medium)] flex items-center justify-center">
+                        <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--text-muted)]" />
                       </div>
                     )}
                     {isLibraryGame && (
@@ -170,7 +170,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h2 className="font-display text-xl font-bold text-[var(--text-primary)] leading-tight">{game.name}</h2>
+                    <h2 className="font-display text-base sm:text-xl font-bold text-[var(--text-primary)] leading-tight">{game.name}</h2>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {game.yearPublished && <Badge variant="default"><Calendar className="w-3 h-3 mr-1" />{game.yearPublished}</Badge>}
                       {game.bggRating != null && <Badge variant="amber"><Star className="w-3 h-3 mr-1" />{game.bggRating?.toFixed(1)}</Badge>}
@@ -203,7 +203,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             <input ref={thumbInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'thumbnail'); e.target.value = '' }} />
 
             {/* Details */}
-            <div className="px-6 pb-6 space-y-5">
+            <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5">
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-2">
                 {game.minPlayers != null && (

@@ -268,9 +268,9 @@ export function LibraryPage() {
   const shelves = useMemo(() => {
     // Available width for game boxes on each shelf
     const availableWidth = shelfWidth - dims.SHELF_PADDING * 2
-    // Fallback width used for games whose image hasn't loaded yet.
-    // Use BOX_MAX_WIDTH (pessimistic) so we never overpack a row before images arrive.
-    const fallbackWidth = dims.BOX_MAX_WIDTH
+    // Use average box width as fallback (most board game boxes are roughly square).
+    // This gives a better initial packing than using max width.
+    const fallbackWidth = dims.BOX_BASE_WIDTH
 
     const rows = []
     let currentRow = []
