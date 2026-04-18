@@ -205,30 +205,30 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             {/* Details */}
             <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5">
               {/* Stats row */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {game.minPlayers != null && (
-                  <div className="card p-3 text-center">
-                    <Users className="w-4 h-4 text-[var(--text-muted)] mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-[var(--text-primary)]">
+                  <div className="card p-2 sm:p-3 text-center">
+                    <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--text-muted)] mx-auto mb-0.5 sm:mb-1" />
+                    <div className="text-xs sm:text-sm font-semibold text-[var(--text-primary)]">
                       {game.minPlayers === game.maxPlayers ? game.minPlayers : `${game.minPlayers}–${game.maxPlayers}`}
                     </div>
-                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Players</div>
-                    {game.bestPlayers && <div className="text-[10px] text-amber-600 mt-1">Best: {game.bestPlayers}</div>}
-                    {game.recommendedPlayers && game.recommendedPlayers !== game.bestPlayers && <div className="text-[10px] text-[var(--text-muted)] mt-0.5">Rec: {game.recommendedPlayers}</div>}
+                    <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Players</div>
+                    {game.bestPlayers && <div className="text-[9px] sm:text-[10px] text-amber-600 mt-0.5">Best: {game.bestPlayers}</div>}
+                    {game.recommendedPlayers && game.recommendedPlayers !== game.bestPlayers && <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)]">Rec: {game.recommendedPlayers}</div>}
                   </div>
                 )}
                 {game.playingTime != null && (
-                  <div className="card p-3 text-center">
-                    <Clock className="w-4 h-4 text-[var(--text-muted)] mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-[var(--text-primary)]">{game.playingTime}m</div>
-                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Play Time</div>
+                  <div className="card p-2 sm:p-3 text-center">
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--text-muted)] mx-auto mb-0.5 sm:mb-1" />
+                    <div className="text-xs sm:text-sm font-semibold text-[var(--text-primary)]">{game.playingTime}m</div>
+                    <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Play Time</div>
                   </div>
                 )}
                 {game.weight != null && (
-                  <div className="card p-3 text-center">
-                    <Weight className="w-4 h-4 text-[var(--text-muted)] mx-auto mb-1" />
-                    <div className="text-sm font-semibold text-[var(--text-primary)]">{game.weight?.toFixed(1)}</div>
-                    <div className="text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Complexity</div>
+                  <div className="card p-2 sm:p-3 text-center">
+                    <Weight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--text-muted)] mx-auto mb-0.5 sm:mb-1" />
+                    <div className="text-xs sm:text-sm font-semibold text-[var(--text-primary)]">{game.weight?.toFixed(1)}</div>
+                    <div className="text-[9px] sm:text-[10px] text-[var(--text-muted)] uppercase tracking-wide">Complexity</div>
                   </div>
                 )}
               </div>

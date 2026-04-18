@@ -68,18 +68,18 @@ function GameCard({ game, onSelect, onAddToLibrary, onAddToWishlist, inLibrary, 
           {game.name}
         </h3>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Tooltip content={inLibrary ? 'In library' : 'Add to library'}>
             <button
               onClick={handleLib}
               disabled={inLibrary || libLoading}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-all
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-md text-[11px] font-medium transition-all overflow-hidden whitespace-nowrap
                 ${inLibrary
                   ? 'bg-green-100 text-green-700 border border-green-200 cursor-default'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--border-subtle)] hover:border-green-400 hover:text-green-700'
                 }`}
             >
-              {libLoading ? <Spinner size="sm" /> : inLibrary ? <CheckCircle2 className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+              {libLoading ? <Spinner size="sm" /> : inLibrary ? <CheckCircle2 className="w-3 h-3 flex-shrink-0" /> : <BookOpen className="w-3 h-3 flex-shrink-0" />}
               {inLibrary ? 'Owned' : 'Library'}
             </button>
           </Tooltip>
@@ -88,14 +88,14 @@ function GameCard({ game, onSelect, onAddToLibrary, onAddToWishlist, inLibrary, 
             <button
               onClick={handleWish}
               disabled={inWishlist || wishLoading}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-md text-xs font-medium transition-all
+              className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-1.5 rounded-md text-[11px] font-medium transition-all overflow-hidden whitespace-nowrap
                 ${inWishlist
                   ? 'bg-[var(--accent-dim)] border border-[rgba(193,127,58,0.3)] cursor-default'
                   : 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border border-[var(--border-subtle)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
                 }`}
               style={inWishlist ? { color: 'var(--accent)' } : undefined}
             >
-              {wishLoading ? <Spinner size="sm" /> : inWishlist ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Bookmark className="w-3.5 h-3.5" />}
+              {wishLoading ? <Spinner size="sm" /> : inWishlist ? <CheckCircle2 className="w-3 h-3 flex-shrink-0" /> : <Bookmark className="w-3 h-3 flex-shrink-0" />}
               {inWishlist ? 'Saved' : 'Wishlist'}
             </button>
           </Tooltip>
