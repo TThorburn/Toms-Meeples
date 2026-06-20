@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Modal } from '../ui/Modal'
 import { Badge, Button, Spinner, ErrorState } from '../ui/primitives'
 import { useApi } from '../../hooks/useApi'
@@ -77,8 +77,15 @@ function fileToDataUrl(file) {
 export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddToWishlist, isLibraryGame, onImageUpdated }) {
   const [addedMsg, setAddedMsg] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [localHeaderImage, setLocalHeaderImage] = useState(null)
+  const [localCoverImage, setLocalCoverImage] = useState(null)
+  const headerInputRef = useRef(null)
   const coverInputRef = useRef(null)
-  const thumbInputRef = useRef(null)
+
+  useEffect(() => {
+    setLocalHeaderImage(null)
+    setLocalCoverImage(null)
+  }, [gameId])
 
   const { data: game, loading, error } = useApi(
     () => gamesApi.getById(gameId),
@@ -98,10 +105,13 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
     setUploading(true)
     try {
       const dataUrl = await fileToDataUrl(file)
-      const payload = type === 'cover'
-        ? { customImage: dataUrl }
-        : { customThumbnail: dataUrl }
-      await libraryApi.update(gameId, payload)
+      if (type === 'header') {
+        await libraryApi.update(gameId, { customImage: dataUrl })
+        setLocalHeaderImage(dataUrl)
+      } else {
+        await libraryApi.update(gameId, { customThumbnail: dataUrl })
+        setLocalCoverImage(dataUrl)
+      }
       if (onImageUpdated) onImageUpdated()
     } catch (err) {
       console.error('Upload failed:', err)
@@ -125,12 +135,11 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             <div className="relative">
               {game.image && (
                 <div className="h-32 sm:h-48 overflow-hidden bg-[var(--bg-secondary)] relative group">
-                  <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
+                  <img src={localHeaderImage || game.image} alt={game.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] via-transparent to-transparent" />
-                  {/* Cover photo upload button — only for library games */}
                   {isLibraryGame && (
                     <button
-                      onClick={() => coverInputRef.current?.click()}
+                      onClick={() => headerInputRef.current?.click()}
                       className="absolute top-3 right-3 px-3 py-1.5 rounded-lg bg-black/50 text-white text-xs font-medium flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
                     >
                       <Camera className="w-3.5 h-3.5" />Change Cover
@@ -140,7 +149,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
               )}
               {!game.image && isLibraryGame && (
                 <div
-                  onClick={() => coverInputRef.current?.click()}
+                  onClick={() => headerInputRef.current?.click()}
                   className="h-32 bg-[var(--bg-secondary)] flex items-center justify-center cursor-pointer hover:bg-[var(--bg-raised)] transition-colors"
                 >
                   <div className="text-center text-[var(--text-muted)]">
@@ -153,8 +162,8 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                 <div className="flex items-start gap-3 sm:gap-4">
                   {/* Thumbnail with upload overlay */}
                   <div className="relative group flex-shrink-0">
-                    {game.thumbnail ? (
-                      <img src={game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
+                    {(localCoverImage || game.thumbnail) ? (
+                      <img src={localCoverImage || game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
                     ) : (
                       <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-[var(--bg-secondary)] border-2 border-[var(--border-medium)] flex items-center justify-center">
                         <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--text-muted)]" />
@@ -162,7 +171,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                     )}
                     {isLibraryGame && (
                       <button
-                        onClick={() => thumbInputRef.current?.click()}
+                        onClick={() => coverInputRef.current?.click()}
                         className="absolute inset-0 rounded-xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Camera className="w-4 h-4 text-white" />
@@ -199,8 +208,8 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             </div>
 
             {/* Hidden file inputs */}
+            <input ref={headerInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'header'); e.target.value = '' }} />
             <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'cover'); e.target.value = '' }} />
-            <input ref={thumbInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'thumbnail'); e.target.value = '' }} />
 
             {/* Details */}
             <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5">

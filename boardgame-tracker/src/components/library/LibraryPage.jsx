@@ -94,7 +94,7 @@ function GameBox({ item, onRemove, onSelect, removing, dims }) {
         onClick={() => onSelect(item)}
       >
         <img
-          src={item.image || item.thumbnail || placeholderGame}
+          src={item.thumbnail || item.image || placeholderGame}
           alt={item.name}
           onError={handleError}
           onLoad={handleLoad}
