@@ -120,6 +120,9 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
     }
   }
 
+  const bannerSrc = localCoverImage || game?.image
+  const thumbSrc = localThumbnailImage || game?.thumbnail
+
   return (
     <Modal open={open} onClose={onClose} size="lg">
       <div className="relative">
@@ -131,11 +134,10 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
         {error && <ErrorState message={error} />}
         {!loading && !error && game && (
           <div>
-            {/* Hero image + title */}
             <div className="relative">
-              {game.image && (
+              {bannerSrc ? (
                 <div className="h-32 sm:h-48 overflow-hidden bg-[var(--bg-secondary)] relative group">
-                  <img src={localCoverImage || game.image} alt={game.name} className="w-full h-full object-cover" />
+                  <img src={bannerSrc} alt={game.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] via-transparent to-transparent" />
                   {isLibraryGame && (
                     <button
@@ -146,24 +148,24 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                     </button>
                   )}
                 </div>
-              )}
-              {!game.image && isLibraryGame && (
-                <div
-                  onClick={() => headerInputRef.current?.click()}
-                  className="h-32 bg-[var(--bg-secondary)] flex items-center justify-center cursor-pointer hover:bg-[var(--bg-raised)] transition-colors"
-                >
-                  <div className="text-center text-[var(--text-muted)]">
-                    <ImagePlus className="w-6 h-6 mx-auto mb-1" />
-                    <span className="text-xs">Add Cover Photo</span>
+              ) : (
+                isLibraryGame && (
+                  <div
+                    onClick={() => headerInputRef.current?.click()}
+                    className="h-32 bg-[var(--bg-secondary)] flex items-center justify-center cursor-pointer hover:bg-[var(--bg-raised)] transition-colors"
+                  >
+                    <div className="text-center text-[var(--text-muted)]">
+                      <ImagePlus className="w-6 h-6 mx-auto mb-1" />
+                      <span className="text-xs">Add Cover Photo</span>
+                    </div>
                   </div>
-                </div>
+                )
               )}
-              <div className={`px-4 sm:px-6 ${game.image ? 'pt-2 sm:pt-3 pb-4 sm:pb-5 -mt-12 sm:-mt-16 relative' : 'pt-4 sm:pt-6 pb-4 sm:pb-5'}`}>
+              <div className={`px-4 sm:px-6 ${bannerSrc ? 'pt-2 sm:pt-3 pb-4 sm:pb-5 -mt-12 sm:-mt-16 relative' : 'pt-4 sm:pt-6 pb-4 sm:pb-5'}`}>
                 <div className="flex items-start gap-3 sm:gap-4">
-                  {/* Thumbnail with upload overlay */}
                   <div className="relative group flex-shrink-0">
-                    {(localThumbnailImage || game.thumbnail) ? (
-                      <img src={localThumbnailImage || game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
+                    {thumbSrc ? (
+                      <img src={thumbSrc} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
                     ) : (
                       <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-[var(--bg-secondary)] border-2 border-[var(--border-medium)] flex items-center justify-center">
                         <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--text-muted)]" />
@@ -187,7 +189,6 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                   </div>
                 </div>
 
-                {/* Action buttons */}
                 {(onAddToLibrary || onAddToWishlist) && (
                   <div className="flex gap-2 mt-4">
                     {onAddToLibrary && (
@@ -207,13 +208,10 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
               </div>
             </div>
 
-            {/* Hidden file inputs */}
             <input ref={headerInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'cover'); e.target.value = '' }} />
             <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'thumbnail'); e.target.value = '' }} />
 
-            {/* Details */}
             <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5">
-              {/* Stats row */}
               <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
                 {game.minPlayers != null && (
                   <div className="card p-2 sm:p-3 text-center">
@@ -242,7 +240,6 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                 )}
               </div>
 
-              {/* Ratings */}
               {game.bggRating != null && (
                 <div className="card p-4 space-y-2">
                   <div className="flex items-center justify-between">
@@ -258,14 +255,12 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                 </div>
               )}
 
-              {/* Credits */}
               <div className="card p-4">
                 <InfoRow icon={Pen} label="Designers" value={game.designers?.join(', ')} />
                 <InfoRow icon={Palette} label="Artists" value={game.artists?.join(', ')} />
                 <InfoRow icon={Building2} label="Publishers" value={game.publishers?.join(', ')} />
               </div>
 
-              {/* Description */}
               {game.description && (
                 <div>
                   <div className="text-xs text-[var(--text-muted)] uppercase tracking-wide mb-2">Description</div>
