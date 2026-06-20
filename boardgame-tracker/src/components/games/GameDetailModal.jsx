@@ -105,7 +105,6 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
     setUploading(true)
     try {
       const dataUrl = await fileToDataUrl(file)
-      // After:
       if (type === 'cover') {
         await libraryApi.update(gameId, { customImage: dataUrl })
         setLocalCoverImage(dataUrl)
@@ -163,7 +162,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                 <div className="flex items-start gap-3 sm:gap-4">
                   {/* Thumbnail with upload overlay */}
                   <div className="relative group flex-shrink-0">
-                    {(localCoverImage || game.thumbnail) ? (
+                    {(localThumbnailImage || game.thumbnail) ? (
                       <img src={localThumbnailImage || game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
                     ) : (
                       <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-[var(--bg-secondary)] border-2 border-[var(--border-medium)] flex items-center justify-center">
