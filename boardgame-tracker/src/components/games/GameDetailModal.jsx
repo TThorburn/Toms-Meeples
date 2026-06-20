@@ -77,14 +77,14 @@ function fileToDataUrl(file) {
 export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddToWishlist, isLibraryGame, onImageUpdated }) {
   const [addedMsg, setAddedMsg] = useState(null)
   const [uploading, setUploading] = useState(false)
-  const [localHeaderImage, setLocalHeaderImage] = useState(null)
   const [localCoverImage, setLocalCoverImage] = useState(null)
+  const [localThumbnailImage, setLocalThumbnailImage] = useState(null)
   const headerInputRef = useRef(null)
   const coverInputRef = useRef(null)
 
   useEffect(() => {
-    setLocalHeaderImage(null)
     setLocalCoverImage(null)
+    setLocalThumbnailImage(null)
   }, [gameId])
 
   const { data: game, loading, error } = useApi(
@@ -105,12 +105,13 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
     setUploading(true)
     try {
       const dataUrl = await fileToDataUrl(file)
-      if (type === 'header') {
+      // After:
+      if (type === 'cover') {
         await libraryApi.update(gameId, { customImage: dataUrl })
-        setLocalHeaderImage(dataUrl)
+        setLocalCoverImage(dataUrl)
       } else {
         await libraryApi.update(gameId, { customThumbnail: dataUrl })
-        setLocalCoverImage(dataUrl)
+        setLocalThumbnailImage(dataUrl)
       }
       if (onImageUpdated) onImageUpdated()
     } catch (err) {
@@ -135,7 +136,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             <div className="relative">
               {game.image && (
                 <div className="h-32 sm:h-48 overflow-hidden bg-[var(--bg-secondary)] relative group">
-                  <img src={localHeaderImage || game.image} alt={game.name} className="w-full h-full object-cover" />
+                  <img src={localCoverImage || game.image} alt={game.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-raised)] via-transparent to-transparent" />
                   {isLibraryGame && (
                     <button
@@ -163,7 +164,7 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
                   {/* Thumbnail with upload overlay */}
                   <div className="relative group flex-shrink-0">
                     {(localCoverImage || game.thumbnail) ? (
-                      <img src={localCoverImage || game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
+                      <img src={localThumbnailImage || game.thumbnail} alt="" className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl object-cover border-2 border-[var(--border-medium)] shadow-lg" />
                     ) : (
                       <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl bg-[var(--bg-secondary)] border-2 border-[var(--border-medium)] flex items-center justify-center">
                         <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-[var(--text-muted)]" />
@@ -208,8 +209,8 @@ export function GameDetailModal({ gameId, open, onClose, onAddToLibrary, onAddTo
             </div>
 
             {/* Hidden file inputs */}
-            <input ref={headerInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'header'); e.target.value = '' }} />
-            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'cover'); e.target.value = '' }} />
+            <input ref={headerInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'cover'); e.target.value = '' }} />
+            <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files[0]) handleImageUpload(e.target.files[0], 'thumbnail'); e.target.value = '' }} />
 
             {/* Details */}
             <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-5">
